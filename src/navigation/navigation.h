@@ -179,7 +179,7 @@ namespace navigation {
         std::vector<Node> Tree_;
         std::vector<int> soln_;
         std::vector<int> path_;
-        int max_iter_ = 2000;
+        int max_iter_ = 1000;
         Eigen::Rotation2Df Rot_ = Eigen::Rotation2Df(0.0);
 		float Cmin_; // distance from Xstart to Xgoal
 		Eigen::Vector2f Xcenter_; // mid-point between Xstart & Xgoal

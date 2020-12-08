@@ -148,8 +148,16 @@ namespace navigation {
 		//else if( theta - theta2 < -steer_kinematic_angle_constraint_)
 		//	theta = -steer_kinematic_angle_constraint_+theta2;
 		//printf("Steer theta: %f \n", theta);
+		/* Vector2f Xnew(x_start.x() + dist * cosf(theta), x_start.y() + dist * sinf(theta));
+		Vector2f Xnew_odom = Rotation2Df(-odom_angle_) * (Xnew - odom_loc_);
+		float ang = atan2f(Xnew_odom.y(), Xnew_odom.x());
+		if (ang > M_PI/6)
+			ang = M_PI/6;
+		else if( ang < -M_PI/6)
+			ang = -M_PI/6;
+		Xnew_odom = Vector2f(dist * cosf(theta), dist * sinf(theta)); */
 		
-		return Vector2f(x_start.x() + dist * cosf(theta), x_start.y() + dist * sinf(theta));
+        return Vector2f(x_start.x() + dist * cosf(theta), x_start.y() + dist * sinf(theta));
  	}
 	
 	bool Navigation::CollisionFree(Vector2f start, Vector2f end) {
@@ -301,6 +309,8 @@ namespace navigation {
 					Xnear = Tree_[near_ndx].loc;
 					Cnew = Cmin + (Xnew-Xnear).norm(); // Cnew = Cost(Xnew) + Line(Xnew,Xnear)
 					if ((Cnew<Cnear) && (CollisionFree(Xnear,Xnew))) {
+						//printf("Rewiring %i to %zu\n", near_ndx, Tree_.size());
+						//printf("Changing cost from %f to %f\n", Cnear, Cnew);
 						Tree_[near_ndx].parent = Tree_.size(); // parent is now Xnew (which isn't added yet)
 						Tree_[near_ndx].cost = Cnew;
 					}
@@ -677,11 +687,11 @@ namespace navigation {
 			if (need_to_replan_) {
 				printf("Recalculating path!\n");
 				path_is_ready_ = false;
-				InformedRRTstar();
 				while (!path_is_ready_){
 					drive_msg_.velocity = 0.0; // m/s
 					drive_msg_.curvature = 0.0; // 1/radius
 					drive_pub_.publish(drive_msg_);
+					InformedRRTstar();
 				}
 				CarrotPositioning();
 				//Sleep(2.0);
