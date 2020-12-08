@@ -142,22 +142,14 @@ namespace navigation {
 	Vector2f Navigation::Steer(Vector2f x_start, Vector2f x_goal) {  //Xnearest, Xrand
         float dist = std::min(step_len_, (x_goal-x_start).norm());
         float theta = atan2f(x_goal.y()-x_start.y(), x_goal.x()-x_start.x());
-		float theta2 = atan2f(odom_loc_.y()-x_goal.y(), odom_loc_.x()-x_goal.x());
-		if (theta - theta2 > steer_kinematic_angle_constraint_)
-			theta = steer_kinematic_angle_constraint_ + theta2;
-		else if( theta - theta2 < -steer_kinematic_angle_constraint_)
-			theta = -steer_kinematic_angle_constraint_+theta2;
-		printf("Steer theta: %f \n", theta);
-		/* Vector2f Xnew(x_start.x() + dist * cosf(theta), x_start.y() + dist * sinf(theta));
-		Vector2f Xnew_odom = Rotation2Df(-odom_angle_) * (Xnew - odom_loc_);
-		float ang = atan2f(Xnew_odom.y(), Xnew_odom.x());
-		if (ang > M_PI/6)
-			ang = M_PI/6;
-		else if( ang < -M_PI/6)
-			ang = -M_PI/6;
-		Xnew_odom = Vector2f(dist * cosf(theta), dist * sinf(theta)); */
+		//float theta2 = atan2f(odom_loc_.y()-x_goal.y(), odom_loc_.x()-x_goal.x());
+		//if (theta - theta2 > steer_kinematic_angle_constraint_)
+		//	theta = steer_kinematic_angle_constraint_ + theta2;
+		//else if( theta - theta2 < -steer_kinematic_angle_constraint_)
+		//	theta = -steer_kinematic_angle_constraint_+theta2;
+		//printf("Steer theta: %f \n", theta);
 		
-        return Vector2f(x_start.x() + dist * cosf(theta), x_start.y() + dist * sinf(theta));
+		return Vector2f(x_start.x() + dist * cosf(theta), x_start.y() + dist * sinf(theta));
  	}
 	
 	bool Navigation::CollisionFree(Vector2f start, Vector2f end) {
@@ -276,9 +268,6 @@ namespace navigation {
 					num_iter_without_change = 0;
 				}
 			}
-			if ((!soln_.empty()) && (Cbest==last_Cbest)) { num_iter_without_change++; }
-			else { num_iter_without_change = 0; }
-			last_Cbest = Cbest;
 			
 			Xrand = Sample(Cbest); // generate sample inside ellipse
 			nearest_ndx = Nearest(Xrand); // find closest node in Tree to Xrand
@@ -286,6 +275,10 @@ namespace navigation {
 			Xnew = Steer(Xnearest, Xrand); // if Xrand is too far away, make it closer
 			printf("Xrand=(%f,%f) , Xnearest=(%f,%f) , Xnew=(%f,%f)\n", Xrand.x(), Xrand.y(), Xnearest.x(), Xnearest.y(), Xnew.x(), Xnew.y());
 			if (CollisionFree(Xnearest, Xnew)) {
+				if ((!soln_.empty()) && (Cbest==last_Cbest)) { num_iter_without_change++; }
+				else { num_iter_without_change = 0; }
+				last_Cbest = Cbest;
+				
 				Cmin = Tree_[nearest_ndx].cost + (Xnew-Xnearest).norm(); // cost to Xnew
 				Xmin = Xnearest;
 				ndx_min = nearest_ndx;
@@ -308,8 +301,6 @@ namespace navigation {
 					Xnear = Tree_[near_ndx].loc;
 					Cnew = Cmin + (Xnew-Xnear).norm(); // Cnew = Cost(Xnew) + Line(Xnew,Xnear)
 					if ((Cnew<Cnear) && (CollisionFree(Xnear,Xnew))) {
-						//printf("Rewiring %i to %zu\n", near_ndx, Tree_.size());
-						//printf("Changing cost from %f to %f\n", Cnear, Cnew);
 						Tree_[near_ndx].parent = Tree_.size(); // parent is now Xnew (which isn't added yet)
 						Tree_[near_ndx].cost = Cnew;
 					}
@@ -686,11 +677,11 @@ namespace navigation {
 			if (need_to_replan_) {
 				printf("Recalculating path!\n");
 				path_is_ready_ = false;
+				InformedRRTstar();
 				while (!path_is_ready_){
 					drive_msg_.velocity = 0.0; // m/s
 					drive_msg_.curvature = 0.0; // 1/radius
 					drive_pub_.publish(drive_msg_);
-					InformedRRTstar();
 				}
 				CarrotPositioning();
 				//Sleep(2.0);

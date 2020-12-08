@@ -179,14 +179,14 @@ namespace navigation {
         std::vector<Node> Tree_;
         std::vector<int> soln_;
         std::vector<int> path_;
-        int max_iter_ = 1000;
+        int max_iter_ = 2000;
         Eigen::Rotation2Df Rot_ = Eigen::Rotation2Df(0.0);
 		float Cmin_; // distance from Xstart to Xgoal
 		Eigen::Vector2f Xcenter_; // mid-point between Xstart & Xgoal
 		float step_len_ = 0.25;
 		float delta_ = 0.5;
 		Eigen::Vector2f map_space_x_ = Eigen::Vector2f(-42.0 , 42.0);
-		Eigen::Vector2f map_space_y_ = Eigen::Vector2f(-10.0 , 23.0);
+		Eigen::Vector2f map_space_y_ = Eigen::Vector2f(-20.0 , 35.0);
 		float eta_ = 1330.0;
 		float gamma_rrt_star_ = 20; //sqrtf(2 * 1.5) * sqrt(10);
 		float steer_kinematic_angle_constraint_ = M_PI/1.25;
